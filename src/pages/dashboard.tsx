@@ -1,13 +1,16 @@
 import { AuthContext } from "@/contexts/AuthContext";
+import { useCan } from "@/hooks/useCan";
 import { setupAPIClient } from "@/services/api";
 import { api } from "@/services/apiClient";
-import { AuthTokenError } from "@/services/errors/AuthTokenError";
 import { withSSRAuth } from "@/utils/withSSRAuth";
-import { destroyCookie } from "nookies";
 import React, { useContext, useEffect } from "react";
 
 export default function dashboard() {
-  const { user } = useContext(AuthContext);
+  const { user, isAuthenticated } = useContext(AuthContext);
+
+  const userCanSeeMetrics = useCan({
+    permissions: ["metrics.list"],
+  });
 
   useEffect(() => {
     api
@@ -16,7 +19,12 @@ export default function dashboard() {
       .catch((err) => console.log(err));
   }, []);
 
-  return <div>dashboard: {user?.email}</div>;
+  return (
+    <div>
+      <h1>dashboard: {user?.email}</h1>
+      {userCanSeeMetrics && <div>Métricas</div>}
+    </div>
+  );
 }
 
 export const getServerSideProps = withSSRAuth(async (ctx) => {
