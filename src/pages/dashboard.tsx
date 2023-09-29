@@ -6,7 +6,7 @@ import { withSSRAuth } from "@/utils/withSSRAuth";
 import React, { useContext, useEffect } from "react";
 
 export default function dashboard() {
-  const { user, isAuthenticated } = useContext(AuthContext);
+  const { user, signOut, isAuthenticated } = useContext(AuthContext);
 
   useEffect(() => {
     api
@@ -18,6 +18,9 @@ export default function dashboard() {
   return (
     <div>
       <h1>dashboard: {user?.email}</h1>
+
+      <button onClick={signOut}>Sign out</button>
+
       <Can permissions={["metrics.list"]}>
         <div>Métricas</div>
       </Can>

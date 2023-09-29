@@ -97,13 +97,10 @@ export function setupAPIClient(ctx = undefined) {
               },
             });
           });
-        } else {
-          // *deslogar o usuario
-          if (typeof window !== "undefined") {
-            signOut();
-          } else {
-            return Promise.reject();
-          }
+        }
+        // *deslogar o usuario
+        if (typeof window !== "undefined") {
+          signOut();
         }
       }
 

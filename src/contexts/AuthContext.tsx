@@ -15,27 +15,45 @@ type SignInCredentials = {
 };
 
 type AuthContextData = {
-  signIn(credentials: SignInCredentials): Promise<void>;
+  signIn: (credentials: SignInCredentials) => Promise<void>;
+  signOut: () => void;
   isAuthenticated: boolean;
   user: User;
 };
 
-type AuthProvider = {
+type AuthProviderProps = {
   children: ReactNode;
 };
 
 export const AuthContext = createContext({} as AuthContextData);
 
+let authChannel: BroadcastChannel; // *colocou esse let pq aqui esta sendo executado no parte do servidor e isso deve ocorrer no lado do cliente. entao sera executado no useeffect
+
 export function signOut() {
   destroyCookie(undefined, "nextauth.token");
   destroyCookie(undefined, "nextauth.refreshToken");
 
+  authChannel.postMessage("signOut");
   Router.push("/");
 }
 
-export function AuthProvider({ children }: AuthProvider) {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User>({} as User);
   const isAuthenticated = !!user;
+
+  useEffect(() => {
+    authChannel = new BroadcastChannel("auth");
+    authChannel.onmessage = (message) => {
+      switch (message.data) {
+        case "signOut":
+          signOut();
+          break;
+
+        default:
+          break;
+      }
+    };
+  }, []);
 
   //* como estamos lidando com informacoes do usuario como permissoes, tipo de acesso e essas informacoes sao mais propensas a serem alteradas, vamos chamar a api para buscar os dados do usuario td vez q ele acessar a app. Se nao fosse esse contexto, se sao dados que sao mais dificies de terem alteracao, poderia apenas utilizar o token.
   useEffect(() => {
@@ -89,7 +107,7 @@ export function AuthProvider({ children }: AuthProvider) {
   }
 
   return (
-    <AuthContext.Provider value={{ signIn, isAuthenticated, user }}>
+    <AuthContext.Provider value={{ signIn, isAuthenticated, user, signOut }}>
       {children}
     </AuthContext.Provider>
   );
